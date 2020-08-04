@@ -11,6 +11,7 @@ def main():
     app.set_frame_lower()
     app.set_title()
     app.first_date_entry()
+    app.set_btn_begin_real()
     app.last_date_entry()
     app.set_checkbox_last_date()
     app.set_btn_search()

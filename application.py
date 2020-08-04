@@ -18,6 +18,7 @@ class Window:
         self.master.geometry("{}x{}+960+150".format(self.WIDTH,self.HEIGHT))
         self.master.resizable(False,False)
         self.interval_dates = tk.IntVar()
+        self.sv_date1 = tk.StringVar()
 
     
     def set_frame_upper(self):
@@ -39,7 +40,6 @@ class Window:
         self.titulo.place(relx = 0.3)
 
     def first_date_entry(self):
-        self.sv_date1 = tk.StringVar()
         self.sv_date1.trace("w",lambda name, index, mode, sv=self.sv_date1: self.entryUpdateDate(self.sv_date1))
         self.first_date = tk.Entry(self.frame_upper,
         state = 'normal', textvariable = self.sv_date1)
@@ -76,7 +76,8 @@ class Window:
             self.last_date.configure(state="normal")
             self.last_date.update()
             self.last_date.delete(0,'end')
-            self.last_date.insert(0,'MM-DD-AAAA')
+            
+            self.last_date.insert(0,dt.datetime.now().strftime("%m%d%Y"))
         else:
             self.last_date.update()
             self.last_date.delete(0,'end')
@@ -92,7 +93,22 @@ class Window:
         )
         self.checkbox_last_date.place(relx = 0.7,
             rely = 0.50)
+
+    def set_btn_begin_real(self):
+        self.btn_begin_real = tk.Button(
+            self.frame_upper,text = "Plano Real",
+            activebackground = '#b5dfff',
+            activeforeground = '#ff0800',
+            command = lambda : self.set_real_date()
+        )
+        self.btn_begin_real.place(relx = 0.7,
+            rely = 0.25, relwidth = 0.25, relheight=0.25
+        )
     
+    def set_real_date(self):
+        self.first_date.delete(0,"end")
+        self.first_date.insert(0,"07011994")
+
     def set_btn_search(self):
         self.btn_search = tk.Button(self.frame_upper,
             text='Pesquisar',
