@@ -14,7 +14,7 @@ class Window:
         self.WIDTH = 600
         self.HEIGHT = 600
         self.frame1_height = 600*0.2
-        self.master.title('Pesquisa Dolar')
+        self.master.title('Pesquisa Dólar')
         self.master.geometry("{}x{}+960+150".format(self.WIDTH,self.HEIGHT))
         self.master.resizable(False,False)
         self.interval_dates = tk.IntVar()
@@ -87,7 +87,7 @@ class Window:
 
     def set_checkbox_last_date(self):
         self.checkbox_last_date = tk.Checkbutton(
-            self.frame_upper, text = "Dolar em um Periodo",
+            self.frame_upper, text = "Dólar em um Periodo",
             variable = self.interval_dates, onvalue = 1,
             offvalue = 0, command = lambda : self.second_date_use()
         )
@@ -162,9 +162,9 @@ class Window:
             except:
                 pass
             if len(data) == 0:
-                str = "Data Invalida ou sem valor de dolar"
+                str = "Data Invalida ou sem valor de Dólar"
             else:
-                str = "Valor do Dolar = {}".format(data[0].get('cotacaoCompra'))
+                str = "Valor do Dólar = {}".format(data[0].get('cotacaoCompra'))
             self.label_result = tk.Label(self.frame_lower,
             text = str)
             self.label_result.place(relx = 0.5,
@@ -176,5 +176,19 @@ class Window:
             data = requests.get(url).json().get('value')
             data = pd.DataFrame(data).set_index('dataHoraCotacao')
             data.index = pd.to_datetime(data.index).date
-            self.frame_lower['bg'] ='red'
-            print(data.head())
+            self.frame_lower['bg'] ='red',
+            try:
+                self.label_result.destroy()
+            except:
+                pass
+            if len(data) == 0:
+                str = "Datas Invalidas ou sem valor de Dólar no periodo"
+            else:
+                dolar_comeco = data.iloc[0]['cotacaoCompra']
+                dolar_fim = data.iloc[-1]['cotacaoCompra']
+                dolar_var = (dolar_fim/dolar_comeco)
+                str = "Variação do Dólar = {:.3f}%\nComeço = {} | Fim = {}".format(dolar_var,dolar_comeco,dolar_fim)
+            self.label_result = tk.Label(self.frame_lower,
+            text = str)
+            self.label_result.place(relx = 0.5,
+            anchor=tk.N)
