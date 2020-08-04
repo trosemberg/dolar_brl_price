@@ -37,7 +37,7 @@ class Window:
     def set_title(self):
         titulo_str = "Pesquisar Preço Dólar, data MMDDAAAA"
         self.titulo = tk.Label(self.frame_upper,text = titulo_str)
-        self.titulo.place(relx = 0.3)
+        self.titulo.place(relx = 0.5,anchor = tk.N)
 
     def first_date_entry(self):
         self.sv_date1.trace("w",lambda name, index, mode, sv=self.sv_date1: self.entryUpdateDate(self.sv_date1))
@@ -155,12 +155,26 @@ class Window:
     def request_api(self):
         if self.interval_dates.get() == 0:
             url = "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoDolarDia(dataCotacao=@dataCotacao)?@dataCotacao='{}'&$top=100&$format=json&$select=cotacaoCompra"
-            url=url.format(self.format_date_to_request(self.sv_date1.get()))
-            
-            print(requests.get(url).json())
+            url = url.format(self.format_date_to_request(self.sv_date1.get()))
+            data = requests.get(url).json().get('value')
+            try:
+                self.label_result.destroy()
+            except:
+                pass
+            if len(data) == 0:
+                str = "Data Invalida ou sem valor de dolar"
+            else:
+                str = "Valor do Dolar = {}".format(data[0].get('cotacaoCompra'))
+            self.label_result = tk.Label(self.frame_lower,
+            text = str)
+            self.label_result.place(relx = 0.5,
+            anchor=tk.N)
         elif self.interval_dates.get() == 1:
+            self.frame_lower['bg'] ='blue'
             url = "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoDolarPeriodo(dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)?@dataInicial='{begin}'&@dataFinalCotacao='{end}'&$format=json&$select=cotacaoCompra,dataHoraCotacao"
             url = url.format(begin = self.format_date_to_request(self.sv_date1.get()),end = self.format_date_to_request(self.sv_date2.get()))
-
-            data = requests.get(url).json()
-            print(len(data.get('value')))
+            data = requests.get(url).json().get('value')
+            data = pd.DataFrame(data).set_index('dataHoraCotacao')
+            data.index = pd.to_datetime(data.index).date
+            self.frame_lower['bg'] ='red'
+            print(data.head())
