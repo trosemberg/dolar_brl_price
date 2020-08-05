@@ -4,7 +4,10 @@ import tkinter as tk
 import requests
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
 import seaborn as sns
 import datetime as dt
 
@@ -35,7 +38,7 @@ class Window:
         self.frame_lower.place(rely = 0.2,relwidth=1,relheight=0.8)
 
     def set_title(self):
-        titulo_str = "Pesquisar Preço Dólar, data MMDDAAAA"
+        titulo_str = "Pesquisar Preço Dólar, data DDMMAAAA"
         self.titulo = tk.Label(self.frame_upper,text = titulo_str)
         self.titulo.place(relx = 0.5,anchor = tk.N)
 
@@ -47,14 +50,14 @@ class Window:
             rely = 0.20,
             relwidth = 0.25,
             relheight=0.25)
-        self.first_date.insert(0,'MM-DD-AAAA')
+        self.first_date.insert(0,'DD-MM-AAAA')
     
     def last_date_entry(self):
         self.sv_date2 = tk.StringVar()
         self.sv_date2.trace("w",lambda name, index, mode, sv=self.sv_date2: self.entryUpdateDate(self.sv_date2))
         self.last_date = tk.Entry(self.frame_upper, 
         state = 'normal', textvariable = self.sv_date2)
-        self.last_date.insert(0,'MM-DD-AAAA')
+        self.last_date.insert(0,'DD-MM-AAAA')
         self.last_date.place(relx = 0.1,
             rely = 0.50,
             relwidth = 0.25,
@@ -65,10 +68,10 @@ class Window:
     def entryUpdateDate(self,stringvar):
         digits = list(filter(str.isdigit,stringvar.get()))
         digits =  digits + ["0","0","0","0","0","0","0","0"]
-        month = int(digits[0]+digits[1])
-        day = int(digits[2]+digits[3])
+        day = int(digits[0]+digits[1])
+        month = int(digits[2]+digits[3])
         year = int(digits[4]+digits[5]+digits[6]+digits[7])
-        stringvar.set("{:02d}{:02d}{:04d}".format(month,day,year))
+        stringvar.set("{:02d}{:02d}{:04d}".format(day,month,year))
 
 
     def second_date_use(self):
@@ -81,7 +84,7 @@ class Window:
         else:
             self.last_date.update()
             self.last_date.delete(0,'end')
-            self.last_date.insert(0,'MM-DD-AAAA')
+            self.last_date.insert(0,'DD-MM-AAAA')
             self.last_date.configure(state="disabled")
 
 
@@ -107,7 +110,7 @@ class Window:
     
     def set_real_date(self):
         self.first_date.delete(0,"end")
-        self.first_date.insert(0,"07011994")
+        self.first_date.insert(0,"01071994")
 
     def set_btn_search(self):
         self.btn_search = tk.Button(self.frame_upper,
@@ -121,8 +124,8 @@ class Window:
             relheight=0.25)
 
     def format_date_numbers(self,date):
-        month = int(date[0]+date[1])
-        day = int(date[2]+date[3])
+        day = int(date[0]+date[1])
+        month = int(date[2]+date[3])
         year = int(date[4]+date[5]+date[6]+date[7])
         if month>12:
             month=12
@@ -136,11 +139,11 @@ class Window:
             year=dt.datetime.now().year
         elif year<1984:
             year=1984
-        return "{:02d}{:02d}{:02d}".format(month,day,year)
+        return "{:02d}{:02d}{:02d}".format(day,month,year)
 
     def format_date_to_request(self,date):
-        month = int(date[0]+date[1])
-        day = int(date[2]+date[3])
+        day = int(date[0]+date[1])
+        month = int(date[2]+date[3])
         year = int(date[4]+date[5]+date[6]+date[7])
         return "{:02d}-{:02d}-{:02d}".format(month,day,year)
 
@@ -152,15 +155,28 @@ class Window:
             self.last_date.insert(0,self.format_date_numbers(date2))
         self.request_api()
 
+    def clean_lower_frame(self):
+        try:
+            self.label_result.destroy()
+        except:
+            pass
+        try:
+            self.graph.get_tk_widget().destroy()
+        except:
+            pass
+        try:
+            self.toolbar.destroy()
+        except:
+            pass
+
+
+
     def request_api(self):
         if self.interval_dates.get() == 0:
             url = "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoDolarDia(dataCotacao=@dataCotacao)?@dataCotacao='{}'&$top=100&$format=json&$select=cotacaoCompra"
             url = url.format(self.format_date_to_request(self.sv_date1.get()))
             data = requests.get(url).json().get('value')
-            try:
-                self.label_result.destroy()
-            except:
-                pass
+            self.clean_lower_frame()
             if len(data) == 0:
                 str = "Data Invalida ou sem valor de Dólar"
             else:
@@ -177,10 +193,7 @@ class Window:
             data = pd.DataFrame(data).set_index('dataHoraCotacao')
             data.index = pd.to_datetime(data.index).date
             self.frame_lower['bg'] ='red',
-            try:
-                self.label_result.destroy()
-            except:
-                pass
+            self.clean_lower_frame()
             if len(data) == 0:
                 str = "Datas Invalidas ou sem valor de Dólar no periodo"
             else:
@@ -192,3 +205,20 @@ class Window:
             text = str)
             self.label_result.place(relx = 0.5,
             anchor=tk.N)
+            self.create_graph(data)
+
+    def create_graph(self,data):
+        f = Figure(figsize=(5,5), dpi=100)
+        a = f.add_subplot(111)
+        a.plot(data.index,data['cotacaoCompra'])
+        a.set_xlabel("Date")
+        a.set_ylabel("Dolar Price")
+        a.minorticks_on()
+        a.grid()
+        a.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
+        self.graph = FigureCanvasTkAgg(f, self.frame_lower)
+        self.graph.get_tk_widget().place(anchor=tk.N,
+            relx =0.5,rely = 0.1, relheight = 0.8)
+
+        self.toolbar = NavigationToolbar2Tk(self.graph, self.frame_lower)
+        self.toolbar.pack()
