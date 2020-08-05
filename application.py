@@ -28,7 +28,7 @@ class Window:
         self.frame_upper = tk.Frame(self.master)
         self.frame_upper.place(relwidth=1,relheight=0.2)
         self.canvas = tk.Canvas(self.frame_upper,height = self.frame1_height,width=self.WIDTH)
-        self.image = ImageTk.PhotoImage(Image.open("./img.jpg").resize((self.WIDTH, int(self.frame1_height)), Image.ANTIALIAS))
+        self.image = ImageTk.PhotoImage(Image.open("./figures/img.jpg").resize((self.WIDTH, int(self.frame1_height)), Image.ANTIALIAS))
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.image)
         self.canvas.pack()
 
