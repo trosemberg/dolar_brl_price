@@ -215,7 +215,7 @@ class Window:
         a.set_ylabel("Dolar Price")
         a.minorticks_on()
         a.grid()
-        a.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
+        f.autofmt_xdate(rotation=45)
         self.graph = FigureCanvasTkAgg(f, self.frame_lower)
         self.graph.get_tk_widget().place(anchor=tk.N,
             relx =0.5,rely = 0.1, relheight = 0.8)
